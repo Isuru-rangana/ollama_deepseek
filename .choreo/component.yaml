@@ -1,23 +1,48 @@
 version: 0.1.0
-type: SERVICE
+type: COMPONENT
+componentType: service
+buildPack: docker
+buildSpec:
+  env:
+    - name: OLLAMA_API_BASE_URL
+      defaultValue: http://localhost:11434
+      required: true
+    - name: OLLAMA_MODEL_NAME
+      defaultValue: deepseek-coder
+      required: true
+    - name: REQUEST_TIMEOUT
+      defaultValue: "300"
+      required: false
+    - name: RATE_LIMIT_PER_MINUTE
+      defaultValue: "60"
+      required: false
+  ports:
+    - name: http
+      port: 8000
+      type: http
+  resources:
+    cpu:
+      required: 0.5
+      limit: 1.0
+    memory:
+      required: "512Mi"
+      limit: "1Gi"
+  docker:
+    context: .
+    file: Dockerfile
+    buildArgs: []
 metadata:
-  name: ollama
-  displayName: ollama
-  description: DeepSeek Coder API with OLLAMA integration for code generation and completion
-  icon: https://raw.githubusercontent.com/wso2/choreo-samples/main/icons/python.png
-  tags:
+  name: ollama-deepseek
+  description: DeepSeek Coder API with OLLAMA integration
+  labels:
     - ai
     - code-generation
     - ollama
     - deepseek
     - python
     - rest-api
-
-build:
-  type: dockerfile
-  dockerfile: Dockerfile
-  context: .
-  dockerPort: 8000
+  projectType: Application
+  icon: https://raw.githubusercontent.com/wso2/choreo-samples/main/icons/python.png
 
 deploy:
   restApi:
@@ -64,23 +89,4 @@ deploy:
           - target: /api/v1/generate
             verb: POST
             secured: true
-            summary: "Generate code using DeepSeek Coder"
-
-configs:
-  env:
-    - name: OLLAMA_API_BASE_URL
-      required: true
-      defaultValue: "http://localhost:11434"
-      description: "Base URL for the OLLAMA API server"
-    - name: OLLAMA_MODEL_NAME
-      required: true
-      defaultValue: "deepseek-coder"
-      description: "Name of the DeepSeek Coder model to use"
-    - name: REQUEST_TIMEOUT
-      required: false
-      defaultValue: "300"
-      description: "Timeout in seconds for API requests"
-    - name: RATE_LIMIT_PER_MINUTE
-      required: false
-      defaultValue: "60"
-      description: "Maximum number of requests allowed per minute" 
+            summary: "Generate code using DeepSeek Coder" 
