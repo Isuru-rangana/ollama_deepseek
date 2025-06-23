@@ -1,0 +1,56 @@
+endpoints:
+  - name: health
+    port: 8000
+    type: REST
+    context: /
+    basePath: /health
+    operations:
+      - method: GET
+        secured: false
+        summary: Health check endpoint
+        responses:
+          - code: 200
+            description: Successful response
+  - name: model
+    port: 8000
+    type: REST
+    context: /api/v1
+    basePath: /model
+    operations:
+      - method: GET
+        secured: true
+        summary: Get model information
+        responses:
+          - code: 200
+            description: Successful response
+          - code: 500
+            description: Server error
+  - name: generate
+    port: 8000
+    type: REST
+    context: /api/v1
+    basePath: /generate
+    operations:
+      - method: POST
+        secured: true
+        summary: Generate code using DeepSeek Coder
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  prompt:
+                    type: string
+                  temperature:
+                    type: number
+                  max_tokens:
+                    type: integer
+        responses:
+          - code: 200
+            description: Successful code generation
+          - code: 400
+            description: Invalid request
+          - code: 500
+            description: Server error 
