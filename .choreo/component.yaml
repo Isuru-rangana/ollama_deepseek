@@ -3,13 +3,15 @@ type: SERVICE
 metadata:
   name: ollama
   displayName: ollama
-  description: DeepSeek Coder API with OLLAMA integration
+  description: DeepSeek Coder API with OLLAMA integration for code generation and completion
   icon: https://raw.githubusercontent.com/wso2/choreo-samples/main/icons/python.png
   tags:
     - ai
     - code-generation
     - ollama
     - deepseek
+    - python
+    - rest-api
 
 build:
   type: dockerfile
@@ -69,12 +71,16 @@ configs:
     - name: OLLAMA_API_BASE_URL
       required: true
       defaultValue: "http://localhost:11434"
+      description: "Base URL for the OLLAMA API server"
     - name: OLLAMA_MODEL_NAME
       required: true
       defaultValue: "deepseek-coder"
+      description: "Name of the DeepSeek Coder model to use"
     - name: REQUEST_TIMEOUT
       required: false
       defaultValue: "300"
+      description: "Timeout in seconds for API requests"
     - name: RATE_LIMIT_PER_MINUTE
       required: false
-      defaultValue: "60" 
+      defaultValue: "60"
+      description: "Maximum number of requests allowed per minute" 
