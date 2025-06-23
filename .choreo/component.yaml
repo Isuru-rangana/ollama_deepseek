@@ -1,0 +1,51 @@
+metadata:
+  name: "ollama"
+  displayName: "ollama"
+  description: "DeepSeek Coder API with OLLAMA integration"
+  icon: "https://raw.githubusercontent.com/wso2/choreo-samples/main/icons/python.png"
+  tags:
+    - "ai"
+    - "code-generation"
+    - "ollama"
+    - "deepseek"
+  
+build:
+  buildPreset: dockerfile
+  dockerfile: Dockerfile
+  dockerPort: 8000
+
+deploy:
+  restApi:
+    apiType: REST
+    port: 8000
+    basePath: /
+    cors:
+      enabled: true
+      allowOrigins:
+        - "*"
+    security:
+      enabled: true
+      authTypes:
+        - OAuth2
+    resources:
+      - path: /health
+        operations:
+          - method: GET
+            secured: false
+      - path: /api/v1/model
+        operations:
+          - method: GET
+      - path: /api/v1/generate
+        operations:
+          - method: POST
+
+configs:
+  env:
+    - name: OLLAMA_API_BASE_URL
+      value: "http://localhost:11434"
+    - name: OLLAMA_MODEL_NAME
+      value: "deepseek-coder"
+    - name: REQUEST_TIMEOUT
+      value: "300"
+    - name: RATE_LIMIT_PER_MINUTE
+      value: "60" 
