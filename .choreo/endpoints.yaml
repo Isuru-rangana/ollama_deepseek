@@ -14,17 +14,14 @@ endpoints:
         - "*"
     resources:
       - path: /health
-        operations:
-          - method: GET
-            secured: false
+        method: GET
+        secured: false
       - path: /api/v1/model
-        operations:
-          - method: GET
-            secured: true
+        method: GET
+        secured: true
       - path: /api/v1/generate
-        operations:
-          - method: POST
-            secured: true
+        method: POST
+        secured: true
   - name: "Health Check"
     basePath: /health
     secured: false
