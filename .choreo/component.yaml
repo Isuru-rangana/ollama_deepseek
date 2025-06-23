@@ -1,34 +1,46 @@
-version: 0.1.0
-type: service
-buildPack: docker
+schemaVersion: v1
+type: container
 metadata:
   name: ollama-deepseek
+  displayName: Ollama DeepSeek API
   description: DeepSeek Coder API with OLLAMA integration
-  tags:
+  icon: https://raw.githubusercontent.com/wso2/choreo-samples/main/icons/python.png
+  labels:
     - ai
     - code-generation
     - ollama
     - deepseek
     - python
     - rest-api
-  icon: https://raw.githubusercontent.com/wso2/choreo-samples/main/icons/python.png
 
-build:
-  dockerfile: Dockerfile
-  context: .
-  env:
-    - name: OLLAMA_API_BASE_URL
-      defaultValue: http://localhost:11434
-      required: true
-    - name: OLLAMA_MODEL_NAME
-      defaultValue: deepseek-coder
-      required: true
-    - name: REQUEST_TIMEOUT
-      defaultValue: "300"
-      required: false
-    - name: RATE_LIMIT_PER_MINUTE
-      defaultValue: "60"
-      required: false
+container:
+  image: ollama-deepseek
+  port: 8000
+  dockerFile:
+    path: Dockerfile
+    buildContext: .
+
+envs:
+  - name: OLLAMA_API_BASE_URL
+    defaultValue: http://localhost:11434
+    required: true
+  - name: OLLAMA_MODEL_NAME
+    defaultValue: deepseek-coder
+    required: true
+  - name: REQUEST_TIMEOUT
+    defaultValue: "300"
+    required: false
+  - name: RATE_LIMIT_PER_MINUTE
+    defaultValue: "60"
+    required: false
+
+resources:
+  requests:
+    cpu: 0.5
+    memory: 512Mi
+  limits:
+    cpu: 1
+    memory: 1Gi
 
 deploy:
   resources:

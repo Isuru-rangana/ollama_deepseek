@@ -1,59 +1,40 @@
 version: 0.1.0
 endpoints:
-  - name: default
-    type: REST
+  - name: health
     port: 8000
+    type: REST
     context: /
-    schemaFilePath: openapi.yaml
-    security:
-      authTypes:
-        - OAuth2
-    cors:
-      enabled: true
-      allowOrigins:
-        - "*"
-    resources:
-      - path: /health
-        method: GET
-        secured: false
-      - path: /api/v1/model
-        method: GET
-        secured: true
-      - path: /api/v1/generate
-        method: POST
-        secured: true
-  - name: "Health Check"
     basePath: /health
-    secured: false
     operations:
-      - target: /health
-        verb: GET
+      - method: GET
         secured: false
-        summary: "Health check endpoint"
+        summary: Health check endpoint
         responses:
           - code: 200
-            description: "Service is healthy"
-  - name: "Model Info"
-    basePath: /api/v1/model
-    secured: true
+            description: Successful response
+  - name: model
+    port: 8000
+    type: REST
+    context: /api/v1
+    basePath: /model
     operations:
-      - target: /api/v1/model
-        verb: GET
+      - method: GET
         secured: true
-        summary: "Get model information"
+        summary: Get model information
         responses:
           - code: 200
-            description: "Model information retrieved successfully"
+            description: Successful response
           - code: 500
-            description: "Internal server error"
-  - name: "Code Generation"
-    basePath: /api/v1/generate
-    secured: true
+            description: Server error
+  - name: generate
+    port: 8000
+    type: REST
+    context: /api/v1
+    basePath: /generate
     operations:
-      - target: /api/v1/generate
-        verb: POST
+      - method: POST
         secured: true
-        summary: "Generate code using DeepSeek Coder"
+        summary: Generate code using DeepSeek Coder
         requestBody:
           required: true
           content:
@@ -63,19 +44,19 @@ endpoints:
                 properties:
                   prompt:
                     type: string
-                    description: "The prompt for code generation"
+                    description: The prompt for code generation
                   temperature:
                     type: number
-                    description: "Temperature for generation (0.0 to 1.0)"
+                    description: Temperature for generation (0.0 to 1.0)
                   max_tokens:
                     type: integer
-                    description: "Maximum tokens to generate"
+                    description: Maximum tokens to generate
                 required:
                   - prompt
         responses:
           - code: 200
-            description: "Code generated successfully"
+            description: Code generated successfully
           - code: 400
-            description: "Invalid request parameters"
+            description: Invalid request parameters
           - code: 500
-            description: "Internal server error" 
+            description: Internal server error 
