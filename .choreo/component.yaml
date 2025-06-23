@@ -18,7 +18,17 @@ deploy:
   restApi:
     apiType: REST
     port: 8000
+    context: /
     basePath: /
+    production:
+      replicas: 1
+      resources:
+        requests:
+          cpu: "0.5"
+          memory: "512Mi"
+        limits:
+          cpu: "1"
+          memory: "1Gi"
     cors:
       enabled: true
       allowOrigins:
@@ -27,25 +37,41 @@ deploy:
       enabled: true
       authTypes:
         - OAuth2
-    resources:
-      - path: /health
+    endpoints:
+      - name: "Health Check"
+        basePath: /health
+        secured: false
         operations:
-          - method: GET
+          - target: /health
+            verb: GET
             secured: false
-      - path: /api/v1/model
+            summary: "Health check endpoint"
+      - name: "Model Info"
+        basePath: /api/v1/model
         operations:
-          - method: GET
-      - path: /api/v1/generate
+          - target: /api/v1/model
+            verb: GET
+            secured: true
+            summary: "Get model information"
+      - name: "Code Generation"
+        basePath: /api/v1/generate
         operations:
-          - method: POST
+          - target: /api/v1/generate
+            verb: POST
+            secured: true
+            summary: "Generate code using DeepSeek Coder"
 
 configs:
   env:
     - name: OLLAMA_API_BASE_URL
-      value: "http://localhost:11434"
+      required: true
+      defaultValue: "http://localhost:11434"
     - name: OLLAMA_MODEL_NAME
-      value: "deepseek-coder"
+      required: true
+      defaultValue: "deepseek-coder"
     - name: REQUEST_TIMEOUT
-      value: "300"
+      required: false
+      defaultValue: "300"
     - name: RATE_LIMIT_PER_MINUTE
-      value: "60" 
+      required: false
+      defaultValue: "60" 
