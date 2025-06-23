@@ -1,37 +1,25 @@
-# Development stage
-FROM python:3.9-slim AS development
+FROM python:3.9-slim
 
 WORKDIR /app
 
-# Copy the requirements file and install dependencies
-COPY requirements.txt requirements.txt
-RUN pip3 install -r requirements.txt
+# Copy requirements first to leverage Docker cache
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the application code
-COPY . .
-
-# Run tests
-CMD ["python3", "-m", "pytest", "tests/", "-v"]
-
-# Production stage
-FROM python:3.9-slim AS production
-
-WORKDIR /app
-
-# Copy only the necessary files for production
-COPY requirements.txt requirements.txt
-RUN pip3 install -r requirements.txt
-
-COPY . .
-
-# Create a new user with UID 10016 (Choreo requirement)
+# Create a non-root user with UID 10016 (Choreo requirement)
 RUN groupadd -g 10016 choreo && \
     useradd -u 10016 -g choreo -s /bin/bash -m choreouser
 
-# Switch to the new user
+# Copy the application code
+COPY ./app .
+
+# Change ownership of the application files
+RUN chown -R 10016:10016 /app
+
+# Switch to non-root user using explicit UID (Choreo requirement)
 USER 10016
 
-EXPOSE 8000
+# Expose the port
+EXPOSE 8080
 
-# Start the FastAPI application
-CMD ["python", "main.py"] 
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8080"] 

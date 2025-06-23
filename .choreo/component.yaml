@@ -1,5 +1,36 @@
+version: 1.0.0
+type: REST_API
+buildSpec:
+  env: docker
+  builder: default
+  buildCommand: docker build -t ollama-deepseek-api .
+deploySpec:
+  replicas: 1
+  envs:
+    - name: OLLAMA_API_BASE_URL
+      value: http://localhost:11434
+    - name: OLLAMA_MODEL_NAME
+      value: deepseek-coder
+    - name: REQUEST_TIMEOUT
+      value: "300"
+    - name: RATE_LIMIT_PER_MINUTE
+      value: "60"
+  containers:
+    - image: ollama-deepseek-api
+      name: main
+      ports:
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+      resources:
+        requests:
+          cpu: "0.5"
+          memory: "512Mi"
+        limits:
+          cpu: "1.0"
+          memory: "1Gi"
+
 schemaVersion: v1
-type: container
 metadata:
   name: ollama-deepseek
   displayName: Ollama DeepSeek API
