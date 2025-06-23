@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  api:
+    build: .
+    network_mode: host
+    environment:
+      - OLLAMA_API_BASE_URL=http://localhost:11434
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+networks:
+  ai-network:
+    driver: bridge 
