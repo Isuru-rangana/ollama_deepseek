@@ -1,39 +1,37 @@
+apiVersion: 0.1.0
 endpoints:
-  - name: health
-    port: 8000
-    type: REST
-    context: /
+  - name: "Health Check"
     basePath: /health
+    secured: false
     operations:
-      - method: GET
+      - target: /health
+        verb: GET
         secured: false
-        summary: Health check endpoint
+        summary: "Health check endpoint"
         responses:
           - code: 200
-            description: Successful response
-  - name: model
-    port: 8000
-    type: REST
-    context: /api/v1
-    basePath: /model
+            description: "Service is healthy"
+  - name: "Model Info"
+    basePath: /api/v1/model
+    secured: true
     operations:
-      - method: GET
+      - target: /api/v1/model
+        verb: GET
         secured: true
-        summary: Get model information
+        summary: "Get model information"
         responses:
           - code: 200
-            description: Successful response
+            description: "Model information retrieved successfully"
           - code: 500
-            description: Server error
-  - name: generate
-    port: 8000
-    type: REST
-    context: /api/v1
-    basePath: /generate
+            description: "Internal server error"
+  - name: "Code Generation"
+    basePath: /api/v1/generate
+    secured: true
     operations:
-      - method: POST
+      - target: /api/v1/generate
+        verb: POST
         secured: true
-        summary: Generate code using DeepSeek Coder
+        summary: "Generate code using DeepSeek Coder"
         requestBody:
           required: true
           content:
@@ -43,14 +41,19 @@ endpoints:
                 properties:
                   prompt:
                     type: string
+                    description: "The prompt for code generation"
                   temperature:
                     type: number
+                    description: "Temperature for generation (0.0 to 1.0)"
                   max_tokens:
                     type: integer
+                    description: "Maximum tokens to generate"
+                required:
+                  - prompt
         responses:
           - code: 200
-            description: Successful code generation
+            description: "Code generated successfully"
           - code: 400
-            description: Invalid request
+            description: "Invalid request parameters"
           - code: 500
-            description: Server error 
+            description: "Internal server error" 

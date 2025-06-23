@@ -1,0 +1,127 @@
+openapi: 3.0.0
+info:
+  title: DeepSeek Coder API
+  description: REST API for code generation using DeepSeek Coder model with OLLAMA
+  version: 1.0.0
+servers:
+  - url: /
+paths:
+  /health:
+    get:
+      summary: Health check endpoint
+      description: Check if the service is healthy
+      operationId: healthCheck
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "healthy"
+  /api/v1/model:
+    get:
+      summary: Get model information
+      description: Get information about the DeepSeek Coder model
+      operationId: getModelInfo
+      security:
+        - OAuth2: []
+      responses:
+        '200':
+          description: Model information retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  model:
+                    type: string
+                    example: "deepseek-coder"
+                  status:
+                    type: string
+                    example: "ready"
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+  /api/v1/generate:
+    post:
+      summary: Generate code using DeepSeek Coder
+      description: Generate code based on the provided prompt
+      operationId: generateCode
+      security:
+        - OAuth2: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - prompt
+              properties:
+                prompt:
+                  type: string
+                  description: The prompt for code generation
+                  example: "Write a Python function to calculate fibonacci numbers"
+                temperature:
+                  type: number
+                  description: Temperature for generation (0.0 to 1.0)
+                  minimum: 0
+                  maximum: 1
+                  default: 0.7
+                  example: 0.7
+                max_tokens:
+                  type: integer
+                  description: Maximum tokens to generate
+                  minimum: 1
+                  default: 2048
+                  example: 2048
+      responses:
+        '200':
+          description: Code generated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  generated_code:
+                    type: string
+                  model:
+                    type: string
+                  total_tokens:
+                    type: integer
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+components:
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      flows:
+        implicit:
+          authorizationUrl: https://api.asgardeo.io/oauth2/authorize
+          scopes: {} 
