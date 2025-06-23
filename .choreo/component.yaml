@@ -1,3 +1,39 @@
+version: 0.1.0
+type: SERVICE
+buildSpec:
+  type: dockerfile
+  dockerfile: Dockerfile
+  context: .
+  env:
+    - name: OLLAMA_API_BASE_URL
+      value: "http://localhost:11434"
+    - name: OLLAMA_MODEL_NAME
+      value: "deepseek-coder"
+    - name: REQUEST_TIMEOUT
+      value: "300"
+    - name: RATE_LIMIT_PER_MINUTE
+      value: "60"
+  ports:
+    - name: http
+      containerPort: 8000
+      servicePort: 8000
+expose:
+  - protocol: http
+    port: 8000
+    context: /
+    basePath: /
+    auth: oauth2
+    endpoints:
+      - path: /health
+        method: GET
+        secured: false
+      - path: /api/v1/model
+        method: GET
+        secured: true
+      - path: /api/v1/generate
+        method: POST
+        secured: true
+
 metadata:
   name: "ollama"
   displayName: "ollama"
