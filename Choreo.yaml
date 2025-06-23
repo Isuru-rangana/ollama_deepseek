@@ -1,0 +1,36 @@
+version: 1.0.0
+type: REST_API
+buildSpec:
+  env:
+    - name: OLLAMA_API_BASE_URL
+      value: "http://localhost:11434"  # This will be updated in Choreo
+    - name: OLLAMA_MODEL_NAME
+      value: "deepseek-coder"
+  python:
+    version: "3.11"
+  dependencies:
+    python:
+      requirements: requirements.txt
+deploy:
+  restApi:
+    port: 8000
+    basePath: /
+    cors:
+      enabled: true
+      allowOrigins:
+        - "*"
+    security:
+      enabled: true
+      authTypes:
+        - OAuth2
+    resources:
+      - path: /health
+        operations:
+          - method: GET
+            secured: false
+      - path: /api/v1/model
+        operations:
+          - method: GET
+      - path: /api/v1/generate
+        operations:
+          - method: POST 
