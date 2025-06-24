@@ -3,37 +3,51 @@ type: REST_API
 buildSpec:
   env: docker
   builder: default
-  buildCommand: docker build -t ollama-deepseek-api .
+  buildCommand: docker build -t ${PROJECT_NAME} .
 metadata:
   name: ollama-deepseek
   displayName: Ollama DeepSeek API
   description: DeepSeek Coder API with OLLAMA integration
   icon: https://raw.githubusercontent.com/wso2/choreo-samples/main/icons/python.png
-  labels:
+  projectVersion: 1.0.0
+  tags:
     - ai
     - code-generation
     - ollama
     - deepseek
     - python
     - rest-api
+  annotations:
+    categories: ["AI/ML"]
+    platform: "Python"
+    tier: "Free"
 deploySpec:
   replicas: 1
   envs:
     - name: OLLAMA_API_BASE_URL
-      value: "http://your-ollama-service:11434"  # This needs to be updated to your actual OLLAMA service URL
+      value: "http://your-ollama-service:11434"
+      description: "OLLAMA API base URL"
+      required: true
     - name: OLLAMA_MODEL_NAME
       value: "deepseek-coder"
+      description: "OLLAMA model name to use"
+      required: true
     - name: REQUEST_TIMEOUT
       value: "300"
+      description: "Request timeout in seconds"
+      required: false
     - name: RATE_LIMIT_PER_MINUTE
       value: "60"
+      description: "Rate limit per minute"
+      required: false
   containers:
-    - image: ollama-deepseek-api
+    - image: ${PROJECT_NAME}
       name: main
       ports:
         - containerPort: 8080
           name: http
           protocol: TCP
+          servicePort: 8080
       resources:
         requests:
           cpu: "0.5"
@@ -41,3 +55,17 @@ deploySpec:
         limits:
           cpu: "1.0"
           memory: "1Gi"
+      livenessProbe:
+        httpGet:
+          path: /api/v1/health
+          port: 8080
+        initialDelaySeconds: 60
+        periodSeconds: 30
+        timeoutSeconds: 10
+      readinessProbe:
+        httpGet:
+          path: /api/v1/health
+          port: 8080
+        initialDelaySeconds: 30
+        periodSeconds: 10
+        timeoutSeconds: 5
