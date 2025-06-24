@@ -9,7 +9,7 @@ import os
 import logging
 
 logger = logging.getLogger(__name__)
-router = APIRouter(prefix="/api/v1")
+router = APIRouter()
 
 @router.get("/")
 def read_root():
@@ -24,7 +24,7 @@ async def health_check():
             "service": "deepseek-coder-api",
             "environment": os.getenv("CHOREO_ENV", "local"),
             "ollama_url": settings.OLLAMA_API_BASE_URL,
-            "model": settings.OLLAMA_MODEL_NAME
+            "model": settings.MODEL_NAME
         }
     except Exception as e:
         logger.error(f"Health check failed: {str(e)}")

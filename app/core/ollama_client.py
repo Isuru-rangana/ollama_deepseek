@@ -1,62 +1,77 @@
-import httpx
+import logging
+import json
 from typing import Dict, Any, Optional
 from .config import settings
+from .connection import ConnectionManager
+
+logger = logging.getLogger(__name__)
 
 class OllamaClient:
-    def __init__(self):
-        self.base_url = settings.OLLAMA_API_BASE_URL
-        self.model = settings.OLLAMA_MODEL_NAME
-        self.timeout = settings.REQUEST_TIMEOUT
+    def __init__(self, model: str):
+        self.model = model
+        self.connection_manager = ConnectionManager()
 
     async def generate(
         self,
         prompt: str,
         system_prompt: Optional[str] = None,
         temperature: float = 0.7,
-        max_tokens: int = 2048,
+        max_tokens: int = 2048
     ) -> Dict[str, Any]:
         """
-        Generate code using the DeepSeek Coder model
+        Generate code using the Ollama API with retry and circuit breaker
         """
-        url = f"{self.base_url}/api/generate"
-        
         payload = {
             "model": self.model,
             "prompt": prompt,
             "system": system_prompt,
-            "temperature": temperature,
-            "max_tokens": max_tokens,
-            "stream": False
+            "options": {
+                "temperature": temperature,
+                "num_predict": max_tokens
+            }
         }
-        
-        async with httpx.AsyncClient() as client:
-            try:
-                response = await client.post(
-                    url,
-                    json=payload,
-                    timeout=self.timeout
-                )
-                response.raise_for_status()
-                return response.json()
-            except httpx.HTTPError as e:
-                raise Exception(f"HTTP error occurred: {str(e)}")
-            except Exception as e:
-                raise Exception(f"An error occurred: {str(e)}")
+
+        try:
+            client = await self.connection_manager.get_client()
+            response = await client.post("/api/generate", json=payload)
+            response.raise_for_status()
+            
+            # Accumulate the response text from the stream
+            response_text = ""
+            total_duration = 0
+            
+            # Process each line in the response
+            for line in response.text.strip().split('\n'):
+                if not line:
+                    continue
+                    
+                # Parse the JSON response
+                chunk = json.loads(line)
+                if chunk.get("response"):
+                    response_text += chunk["response"]
+                if chunk.get("total_duration"):
+                    total_duration = chunk["total_duration"]
+                
+            return {
+                "response": response_text,
+                "model": self.model,
+                "total_duration": total_duration
+            }
+        except Exception as e:
+            logger.error(f"Error generating response: {str(e)}")
+            raise
 
     async def get_model_info(self) -> Dict[str, Any]:
         """
-        Get information about the loaded model
+        Get information about the model
         """
-        url = f"{self.base_url}/api/tags"
-        
-        async with httpx.AsyncClient() as client:
-            try:
-                response = await client.get(url, timeout=self.timeout)
-                response.raise_for_status()
-                return response.json()
-            except httpx.HTTPError as e:
-                raise Exception(f"HTTP error occurred: {str(e)}")
-            except Exception as e:
-                raise Exception(f"An error occurred: {str(e)}")
+        try:
+            client = await self.connection_manager.get_client()
+            response = await client.post("/api/show", json={"name": self.model})
+            response.raise_for_status()
+            return response.json()
+        except Exception as e:
+            logger.error(f"Error getting model info: {str(e)}")
+            raise
 
-ollama_client = OllamaClient() 
+ollama_client = OllamaClient(model=settings.MODEL_NAME) 

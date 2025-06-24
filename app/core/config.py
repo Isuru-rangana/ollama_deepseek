@@ -1,6 +1,23 @@
 from pydantic_settings import BaseSettings
 from typing import Optional
 import os
+import socket
+import logging
+
+logger = logging.getLogger(__name__)
+
+def get_host_ip():
+    """Get the host IP address for local development"""
+    try:
+        # Try to get the host IP address
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        host_ip = s.getsockname()[0]
+        s.close()
+        return f"http://{host_ip}:11434"
+    except:
+        # Fallback to localhost
+        return "http://127.0.0.1:11434"
 
 class Settings(BaseSettings):
     # API Configuration
@@ -8,11 +25,15 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "DeepSeek Coder API"
     
     # OLLAMA Configuration
-    OLLAMA_API_BASE_URL: str = os.getenv("OLLAMA_API_BASE_URL", "http://localhost:11434")
-    OLLAMA_MODEL_NAME: str = os.getenv("OLLAMA_MODEL_NAME", "deepseek-coder")
+    OLLAMA_API_BASE_URL: str = os.getenv(
+        "OLLAMA_API_BASE_URL",
+        get_host_ip()
+    )
+    MODEL_NAME: str = os.getenv("MODEL_NAME", "deepseek-coder")
+    ENVIRONMENT: str = os.getenv("ENVIRONMENT", "local")
     
-    # Timeout settings (in seconds)
-    REQUEST_TIMEOUT: int = int(os.getenv("REQUEST_TIMEOUT", "300"))
+    # Request Configuration
+    REQUEST_TIMEOUT: int = int(os.getenv("REQUEST_TIMEOUT", "30"))
     
     # Rate limiting
     RATE_LIMIT_PER_MINUTE: int = int(os.getenv("RATE_LIMIT_PER_MINUTE", "60"))
@@ -21,11 +42,9 @@ class Settings(BaseSettings):
         case_sensitive = True
 
     def validate_settings(self):
-        """Validate critical settings"""
-        if not self.OLLAMA_API_BASE_URL:
-            raise ValueError("OLLAMA_API_BASE_URL must be set")
-        if not self.OLLAMA_MODEL_NAME:
-            raise ValueError("OLLAMA_MODEL_NAME must be set")
+        """Validate and adjust settings based on environment"""
+        logger.info(f"Using OLLAMA API URL: {self.OLLAMA_API_BASE_URL}")
+        logger.info(f"Using model: {self.MODEL_NAME}")
         return self
 
 settings = Settings().validate_settings() 
