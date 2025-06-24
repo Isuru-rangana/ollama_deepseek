@@ -3,8 +3,7 @@ type: REST_API
 buildSpec:
   env: docker
   builder: default
-  buildCommand: docker build -t ${PROJECT_NAME} ..
-  context: ..
+  buildCommand: cd .. && docker build -t ${PROJECT_NAME} .
 metadata:
   name: deepseek-api
   displayName: DeepSeek Coder API
