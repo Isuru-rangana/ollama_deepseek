@@ -11,7 +11,7 @@ RUN groupadd -g 10016 choreo && \
     useradd -u 10016 -g choreo -s /bin/bash -m choreouser
 
 # Copy the application code
-COPY ../app .
+COPY app/ .
 
 # Change ownership of the application files
 RUN chown -R 10016:10016 /app
