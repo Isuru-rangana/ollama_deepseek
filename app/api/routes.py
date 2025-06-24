@@ -1,10 +1,37 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException
+from fastapi.responses import JSONResponse
 from typing import Dict, Any, Optional
 from ..core.ollama_client import ollama_client
 from ..models.request_models import GenerateRequest
 from ..models.response_models import GenerateResponse, ModelInfoResponse
+from ..core.config import settings
+import os
+import logging
 
-router = APIRouter()
+logger = logging.getLogger(__name__)
+router = APIRouter(prefix="/api/v1")
+
+@router.get("/")
+def read_root():
+    return {"message": "Welcome to Ollama DeepSeek API"}
+
+@router.get("/health")
+async def health_check():
+    """Health check endpoint"""
+    try:
+        return {
+            "status": "healthy",
+            "service": "deepseek-coder-api",
+            "environment": os.getenv("CHOREO_ENV", "local"),
+            "ollama_url": settings.OLLAMA_API_BASE_URL,
+            "model": settings.OLLAMA_MODEL_NAME
+        }
+    except Exception as e:
+        logger.error(f"Health check failed: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content={"status": "unhealthy", "error": str(e)}
+        )
 
 @router.post("/generate", response_model=GenerateResponse)
 async def generate_code(request: GenerateRequest):
