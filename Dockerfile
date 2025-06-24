@@ -11,7 +11,7 @@ RUN groupadd -g 10016 choreo && \
     useradd -u 10016 -g choreo -s /bin/bash -m choreouser
 
 # Copy the application code
-COPY ./app .
+COPY . .
 
 # Change ownership of the application files
 RUN chown -R 10016:10016 /app
@@ -22,4 +22,7 @@ USER 10016
 # Expose the port
 EXPOSE 8080
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8080"] 
+# Set Python path
+ENV PYTHONPATH=/app
+
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080"] 

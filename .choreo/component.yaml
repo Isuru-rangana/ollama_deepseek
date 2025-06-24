@@ -4,13 +4,25 @@ buildSpec:
   env: docker
   builder: default
   buildCommand: docker build -t ollama-deepseek-api .
+metadata:
+  name: ollama-deepseek
+  displayName: Ollama DeepSeek API
+  description: DeepSeek Coder API with OLLAMA integration
+  icon: https://raw.githubusercontent.com/wso2/choreo-samples/main/icons/python.png
+  labels:
+    - ai
+    - code-generation
+    - ollama
+    - deepseek
+    - python
+    - rest-api
 deploySpec:
   replicas: 1
   envs:
     - name: OLLAMA_API_BASE_URL
-      value: http://localhost:11434
+      value: "http://your-ollama-service:11434"  # This needs to be updated to your actual OLLAMA service URL
     - name: OLLAMA_MODEL_NAME
-      value: deepseek-coder
+      value: "deepseek-coder"
     - name: REQUEST_TIMEOUT
       value: "300"
     - name: RATE_LIMIT_PER_MINUTE
@@ -29,113 +41,3 @@ deploySpec:
         limits:
           cpu: "1.0"
           memory: "1Gi"
-
-schemaVersion: v1
-metadata:
-  name: ollama-deepseek
-  displayName: Ollama DeepSeek API
-  description: DeepSeek Coder API with OLLAMA integration
-  icon: https://raw.githubusercontent.com/wso2/choreo-samples/main/icons/python.png
-  labels:
-    - ai
-    - code-generation
-    - ollama
-    - deepseek
-    - python
-    - rest-api
-
-container:
-  image: ollama-deepseek
-  port: 8000
-  dockerFile:
-    path: Dockerfile
-    buildContext: .
-
-envs:
-  - name: OLLAMA_API_BASE_URL
-    defaultValue: http://localhost:11434
-    required: true
-  - name: OLLAMA_MODEL_NAME
-    defaultValue: deepseek-coder
-    required: true
-  - name: REQUEST_TIMEOUT
-    defaultValue: "300"
-    required: false
-  - name: RATE_LIMIT_PER_MINUTE
-    defaultValue: "60"
-    required: false
-
-resources:
-  requests:
-    cpu: 0.5
-    memory: 512Mi
-  limits:
-    cpu: 1
-    memory: 1Gi
-
-deploy:
-  resources:
-    - type: container
-      name: ollama-deepseek
-      replicas: 1
-      requirements:
-        cpu: "0.5"
-        memory: "512Mi"
-      limits:
-        cpu: "1"
-        memory: "1Gi"
-      port: 8000
-      env:
-        - name: OLLAMA_API_BASE_URL
-          value: ${OLLAMA_API_BASE_URL}
-        - name: OLLAMA_MODEL_NAME
-          value: ${OLLAMA_MODEL_NAME}
-        - name: REQUEST_TIMEOUT
-          value: ${REQUEST_TIMEOUT}
-        - name: RATE_LIMIT_PER_MINUTE
-          value: ${RATE_LIMIT_PER_MINUTE}
-  restApi:
-    apiType: REST
-    port: 8000
-    context: /
-    basePath: /
-    production:
-      replicas: 1
-      resources:
-        requests:
-          cpu: "0.5"
-          memory: "512Mi"
-        limits:
-          cpu: "1"
-          memory: "1Gi"
-    cors:
-      enabled: true
-      allowOrigins:
-        - "*"
-    security:
-      enabled: true
-      authTypes:
-        - OAuth2
-    endpoints:
-      - name: "Health Check"
-        basePath: /health
-        secured: false
-        operations:
-          - target: /health
-            verb: GET
-            secured: false
-            summary: "Health check endpoint"
-      - name: "Model Info"
-        basePath: /api/v1/model
-        operations:
-          - target: /api/v1/model
-            verb: GET
-            secured: true
-            summary: "Get model information"
-      - name: "Code Generation"
-        basePath: /api/v1/generate
-        operations:
-          - target: /api/v1/generate
-            verb: POST
-            secured: true
-            summary: "Generate code using DeepSeek Coder" 
