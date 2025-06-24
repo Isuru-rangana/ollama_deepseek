@@ -1,32 +1,32 @@
 version: 1.0.0
 type: REST_API
 buildSpec:
-  env:
+  env: docker
+  builder: default
+  buildCommand: docker build -t choreo-sample-api .
+deploySpec:
+  replicas: 1
+  envs:
     - name: OLLAMA_API_BASE_URL
       value: "${OLLAMA_API_URL}"
-      description: "OLLAMA API base URL"
       required: true
     - name: MODEL_NAME
       value: "deepseek-coder"
-      description: "OLLAMA model name to use"
       required: true
-    - name: ENVIRONMENT
-      value: "production"
-      description: "Environment name"
-      required: true
-    - name: REQUEST_TIMEOUT
-      value: "300"
-      description: "Request timeout in seconds"
-      required: false
-    - name: RATE_LIMIT_PER_MINUTE
-      value: "60"
-      description: "Rate limit per minute"
-      required: false
-  python:
-    version: "3.11"
-  dependencies:
-    python:
-      requirements: requirements.txt
+  containers:
+    - image: choreo-sample-api
+      name: main
+      ports:
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+      resources:
+        requests:
+          cpu: "0.1"
+          memory: "128Mi"
+        limits:
+          cpu: "0.5"
+          memory: "256Mi"
 deploy:
   restApi:
     port: 8080
