@@ -1,28 +1,34 @@
-FROM python:3.9-slim
+FROM python:3.11-slim
 
+# Set working directory
 WORKDIR /app
 
-# Copy requirements first to leverage Docker cache
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    ENVIRONMENT=production \
+    PORT=8080
+
+# Install system dependencies
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        build-essential \
+        curl \
+        netcat-traditional \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements file
 COPY requirements.txt .
+
+# Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Create a non-root user with UID 10016 (Choreo requirement)
-RUN groupadd -g 10016 choreo && \
-    useradd -u 10016 -g choreo -s /bin/bash -m choreouser
-
-# Copy the application code
+# Copy project files
 COPY . .
 
-# Change ownership of the application files
-RUN chown -R 10016:10016 /app
-
-# Switch to non-root user using explicit UID (Choreo requirement)
-USER 10016
-
-# Expose the port
+# Expose port
 EXPOSE 8080
 
-# Set Python path
-ENV PYTHONPATH=/app
-
+# Command to run the application
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080"] 
