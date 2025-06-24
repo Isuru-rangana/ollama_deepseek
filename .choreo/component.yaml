@@ -7,7 +7,7 @@ buildSpec:
 metadata:
   name: deepseek-api
   displayName: DeepSeek Coder API
-  description: DeepSeek Coder API with OLLAMA integration
+  description: REST API for code generation using DeepSeek Coder model with Ollama integration
   icon: https://raw.githubusercontent.com/wso2/choreo-samples/main/icons/python.png
   projectVersion: 1.0.0
   tags:
@@ -50,22 +50,22 @@ deploySpec:
           servicePort: 8080
       resources:
         requests:
-          cpu: "0.5"
-          memory: "512Mi"
+          cpu: "0.1"
+          memory: "128Mi"
         limits:
-          cpu: "1.0"
-          memory: "1Gi"
+          cpu: "0.5"
+          memory: "256Mi"
       livenessProbe:
         httpGet:
-          path: /api/v1/health
+          path: /health
           port: 8080
-        initialDelaySeconds: 60
+        initialDelaySeconds: 30
         periodSeconds: 30
         timeoutSeconds: 10
       readinessProbe:
         httpGet:
-          path: /api/v1/health
+          path: /health
           port: 8080
-        initialDelaySeconds: 30
+        initialDelaySeconds: 15
         periodSeconds: 10
         timeoutSeconds: 5
