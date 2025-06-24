@@ -5,8 +5,8 @@ buildSpec:
   builder: default
   buildCommand: docker build -t ${PROJECT_NAME} .
 metadata:
-  name: ollama-deepseek
-  displayName: Ollama DeepSeek API
+  name: deepseek-api
+  displayName: DeepSeek Coder API
   description: DeepSeek Coder API with OLLAMA integration
   icon: https://raw.githubusercontent.com/wso2/choreo-samples/main/icons/python.png
   projectVersion: 1.0.0
@@ -25,10 +25,10 @@ deploySpec:
   replicas: 1
   envs:
     - name: OLLAMA_API_BASE_URL
-      value: "http://your-ollama-service:11434"
-      description: "OLLAMA API base URL"
+      value: "${OLLAMA_API_URL}"
+      description: "OLLAMA API base URL (e.g., http://your-ollama-host:11434)"
       required: true
-    - name: OLLAMA_MODEL_NAME
+    - name: MODEL_NAME
       value: "deepseek-coder"
       description: "OLLAMA model name to use"
       required: true
