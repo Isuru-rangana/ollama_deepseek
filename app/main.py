@@ -1,124 +1,105 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from typing import Optional
 import httpx
-import os
 import logging
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Environment variables
-OLLAMA_API_BASE_URL = os.getenv("OLLAMA_API_BASE_URL", "http://localhost:11434")
-MODEL_NAME = os.getenv("MODEL_NAME", "deepseek-coder")
+app = FastAPI()
 
-app = FastAPI(
-    title="DeepSeek Coder API",
-    description="REST API for code generation using DeepSeek Coder",
-    version="1.0.0"
-)
+# Constants
+OLLAMA_API_BASE_URL = "http://ollama:11434"
+MODEL_NAME = "deepseek-coder"
 
 class GenerateRequest(BaseModel):
     prompt: str
-    system_prompt: Optional[str] = None
-    temperature: Optional[float] = 0.7
-    max_tokens: Optional[int] = 500
-
-@app.get("/")
-def read_root():
-    """Root endpoint"""
-    return {
-        "message": "Welcome to DeepSeek Coder API",
-        "version": "1.0.0",
-        "status": "running"
-    }
 
 @app.get("/health")
 async def health_check():
     """Health check endpoint"""
     try:
-        # Try to connect to Ollama
         async with httpx.AsyncClient() as client:
             response = await client.get(f"{OLLAMA_API_BASE_URL}/api/tags")
-            is_ollama_healthy = response.status_code == 200
+            if response.status_code != 200:
+                return {
+                    "status": "unhealthy",
+                    "service": "deepseek-coder-api",
+                    "ollama": {
+                        "url": OLLAMA_API_BASE_URL,
+                        "status": "disconnected"
+                    }
+                }
+            return {
+                "status": "healthy",
+                "service": "deepseek-coder-api",
+                "ollama": {
+                    "url": OLLAMA_API_BASE_URL,
+                    "status": "connected"
+                }
+            }
     except Exception as e:
-        logger.error(f"Ollama health check failed: {str(e)}")
-        is_ollama_healthy = False
-
-    health_status = {
-        "status": "healthy" if is_ollama_healthy else "unhealthy",
-        "service": "deepseek-coder-api",
-        "ollama": {
-            "url": OLLAMA_API_BASE_URL,
-            "status": "connected" if is_ollama_healthy else "disconnected"
-        },
-        "model": MODEL_NAME
-    }
-
-    return health_status if is_ollama_healthy else HTTPException(
-        status_code=503,
-        detail=health_status
-    )
+        logger.error(f"Health check failed: {str(e)}")
+        return {
+            "status": "unhealthy",
+            "service": "deepseek-coder-api",
+            "error": str(e)
+        }
 
 @app.post("/generate")
 async def generate_code(request: GenerateRequest):
     """Generate code using DeepSeek Coder"""
     try:
+        # Log the incoming request
+        logger.info(f"Received prompt: {request.prompt}")
+        
+        # Make request to Ollama
         async with httpx.AsyncClient() as client:
             response = await client.post(
                 f"{OLLAMA_API_BASE_URL}/api/generate",
                 json={
                     "model": MODEL_NAME,
                     "prompt": request.prompt,
-                    "system": request.system_prompt,
-                    "options": {
-                        "temperature": request.temperature,
-                        "num_predict": request.max_tokens
-                    }
+                    "stream": False
                 },
-                timeout=60.0  # Set timeout to 60 seconds
+                timeout=60.0
             )
-            response.raise_for_status()
-            return response.json()
-    except httpx.TimeoutException:
+            
+            # Log the raw response
+            logger.info(f"Raw response: {response.text}")
+            
+            # Check if response is successful
+            if response.status_code != 200:
+                raise HTTPException(
+                    status_code=response.status_code,
+                    detail=f"Ollama API returned status code {response.status_code}"
+                )
+            
+            # Parse the response
+            result = response.json()
+            
+            # Return the generated code
+            return {
+                "generated_code": result.get("response", ""),
+                "status": "success"
+            }
+            
+    except httpx.TimeoutError:
         logger.error("Request to Ollama timed out")
         raise HTTPException(
             status_code=504,
-            detail="Request to code generation service timed out"
+            detail="Request timed out"
+        )
+    except httpx.RequestError as e:
+        logger.error(f"Request to Ollama failed: {str(e)}")
+        raise HTTPException(
+            status_code=502,
+            detail=f"Failed to connect to Ollama: {str(e)}"
         )
     except Exception as e:
-        logger.error(f"Code generation failed: {str(e)}")
+        logger.error(f"Unexpected error: {str(e)}")
         raise HTTPException(
             status_code=500,
-            detail=f"Code generation failed: {str(e)}"
-        )
-
-@app.get("/model")
-async def get_model_info():
-    """Get information about the loaded model"""
-    try:
-        async with httpx.AsyncClient() as client:
-            response = await client.post(
-                f"{OLLAMA_API_BASE_URL}/api/show",
-                json={"name": MODEL_NAME},
-                timeout=30.0
-            )
-            response.raise_for_status()
-            return {
-                "model_name": MODEL_NAME,
-                "status": "loaded",
-                "details": response.json()
-            }
-    except httpx.TimeoutException:
-        logger.error("Request to get model info timed out")
-        raise HTTPException(
-            status_code=504,
-            detail="Request to get model info timed out"
-        )
-    except Exception as e:
-        logger.error(f"Failed to get model info: {str(e)}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to get model info: {str(e)}"
+            detail=f"Internal server error: {str(e)}"
         ) 
