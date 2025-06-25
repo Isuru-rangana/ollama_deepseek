@@ -1,5 +1,25 @@
-version: 0.1.0
+version: 1.0
 endpoints:
+  - name: Default
+    port: 8080
+    type: REST
+    context: /
+    schemaFilePath: openapi.yaml
+    metadata:
+      protocol: HTTP
+      timeout: 120000
+      retryConfig:
+        count: 0
+        statusCodes: []
+      cors:
+        enabled: true
+        allowOrigins:
+          - "*"
+        allowMethods:
+          - GET
+          - POST
+        allowHeaders:
+          - "*"
   - name: health
     port: 8000
     type: REST

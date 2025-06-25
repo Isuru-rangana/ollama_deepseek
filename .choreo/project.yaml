@@ -1,0 +1,26 @@
+version: 1.0
+name: deepseek-coder-api
+components:
+  - name: deepseek-coder-api
+    type: REST_API
+    source:
+      directory: .
+      language: python
+      buildSpec:
+        build:
+          docker:
+            file: Dockerfile
+            context: .
+        env:
+          - name: OLLAMA_API_URL
+            value: "http://localhost:11434"
+          - name: OLLAMA_MODEL
+            value: "deepseek-coder"
+          - name: OLLAMA_TIMEOUT_SECONDS
+            value: "120"
+    endpoints:
+      - name: default
+        type: REST
+        port: 8080
+        context: /
+        schemaFilePath: openapi.yaml 
