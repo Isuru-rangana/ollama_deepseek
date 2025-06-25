@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 app = FastAPI()
 
 # Constants - Read from environment variables with defaults
-OLLAMA_API_BASE_URL = os.getenv("OLLAMA_API_URL", "http://ollama:11434")
+OLLAMA_API_BASE_URL = os.getenv("OLLAMA_API_URL", "http://localhost:11434")
 MODEL_NAME = os.getenv("OLLAMA_MODEL", "deepseek-coder")
 TIMEOUT_SECONDS = int(os.getenv("OLLAMA_TIMEOUT_SECONDS", "60"))
 
