@@ -1,32 +1,72 @@
-version: 1.0.0
+version: 1.0
 type: REST_API
 buildSpec:
-  env: docker
-  builder: default
-  buildCommand: docker build -t choreo-sample-api .
-deploySpec:
-  replicas: 1
-  envs:
-    - name: OLLAMA_API_BASE_URL
-      value: "${OLLAMA_API_URL}"
-      required: true
-    - name: MODEL_NAME
+  source:
+    directory: .
+  build:
+    docker:
+      file: Dockerfile
+      context: .
+  env:
+    - name: OLLAMA_API_URL
+      value: "http://localhost:11434"
+    - name: OLLAMA_MODEL
       value: "deepseek-coder"
-      required: true
-  containers:
-    - image: choreo-sample-api
-      name: main
-      ports:
-        - containerPort: 8080
-          name: http
-          protocol: TCP
-      resources:
-        requests:
-          cpu: "0.1"
-          memory: "128Mi"
-        limits:
-          cpu: "0.5"
-          memory: "256Mi"
+    - name: OLLAMA_TIMEOUT_SECONDS
+      value: "120"
+  resources:
+    - type: compute
+      name: default-compute
+      size: large
+      scaling:
+        minReplicas: 1
+        maxReplicas: 1
+  ports:
+    - name: http
+      port: 8080
+      type: http
+    - name: ollama
+      port: 11434
+      type: tcp
+  healthCheck:
+    port: 8080
+    path: /health
+    initialDelaySeconds: 60
+    periodSeconds: 30
+    failureThreshold: 3
+metadata:
+  name: deepseek-coder-api
+  description: DeepSeek Coder API with integrated Ollama service
+  tags:
+    - ai
+    - code-generation
+    - ollama
+    - deepseek
+  labels:
+    version: 1.0.0
+endpoints:
+  - name: default
+    type: REST
+    context: /
+    port: 8080
+    visibility: PUBLIC
+    cors:
+      enabled: true
+      allowOrigins:
+        - "*"
+      allowMethods:
+        - GET
+        - POST
+      allowHeaders:
+        - "*"
+security:
+  authentication:
+    enabled: true
+    type: OAuth2
+  rateLimit:
+    enabled: true
+    requestsPerUnit: 100
+    unit: MINUTE
 deploy:
   restApi:
     port: 8080

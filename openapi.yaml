@@ -1,127 +1,133 @@
 openapi: 3.0.0
 info:
   title: DeepSeek Coder API
-  description: REST API for code generation using DeepSeek Coder model with OLLAMA
   version: 1.0.0
+  description: |
+    API for generating code using DeepSeek Coder model through Ollama.
+    
+    This API provides endpoints for:
+    - Generating code based on natural language prompts
+    - Checking the health and status of the service
 servers:
-  - url: /
+  - url: https://{baseUrl}/ollama/choreo/v1.0
+    variables:
+      baseUrl:
+        default: localhost:8080
+        description: Base URL of the API
 paths:
   /health:
     get:
-      summary: Health check endpoint
-      description: Check if the service is healthy
+      summary: Health Check
+      description: Check the health status of the API and Ollama service
       operationId: healthCheck
       responses:
         '200':
-          description: Service is healthy
+          description: Service health status
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                    example: "healthy"
-  /api/v1/model:
-    get:
-      summary: Get model information
-      description: Get information about the DeepSeek Coder model
-      operationId: getModelInfo
-      security:
-        - OAuth2: []
-      responses:
-        '200':
-          description: Model information retrieved successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  model:
-                    type: string
-                    example: "deepseek-coder"
-                  status:
-                    type: string
-                    example: "ready"
+                $ref: '#/components/schemas/HealthResponse'
         '500':
           description: Internal server error
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-  /api/v1/generate:
+                $ref: '#/components/schemas/ErrorResponse'
+  /generate:
     post:
-      summary: Generate code using DeepSeek Coder
-      description: Generate code based on the provided prompt
+      summary: Generate Code
+      description: Generate code using DeepSeek Coder model
       operationId: generateCode
-      security:
-        - OAuth2: []
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              type: object
-              required:
-                - prompt
-              properties:
-                prompt:
-                  type: string
-                  description: The prompt for code generation
-                  example: "Write a Python function to calculate fibonacci numbers"
-                temperature:
-                  type: number
-                  description: Temperature for generation (0.0 to 1.0)
-                  minimum: 0
-                  maximum: 1
-                  default: 0.7
-                  example: 0.7
-                max_tokens:
-                  type: integer
-                  description: Maximum tokens to generate
-                  minimum: 1
-                  default: 2048
-                  example: 2048
+              $ref: '#/components/schemas/GenerateRequest'
       responses:
         '200':
-          description: Code generated successfully
+          description: Successfully generated code
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  generated_code:
-                    type: string
-                  model:
-                    type: string
-                  total_tokens:
-                    type: integer
+                $ref: '#/components/schemas/GenerateResponse'
         '400':
-          description: Invalid request parameters
+          description: Bad request
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  error:
-                    type: string
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: Internal server error
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  error:
-                    type: string
+                $ref: '#/components/schemas/ErrorResponse'
+        '502':
+          description: Failed to connect to Ollama
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '504':
+          description: Request timeout
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 components:
-  securitySchemes:
-    OAuth2:
-      type: oauth2
-      flows:
-        implicit:
-          authorizationUrl: https://api.asgardeo.io/oauth2/authorize
-          scopes: {} 
+  schemas:
+    GenerateRequest:
+      type: object
+      required:
+        - prompt
+      properties:
+        prompt:
+          type: string
+          description: The natural language prompt for code generation
+          example: "Write a Python function to calculate fibonacci sequence"
+    GenerateResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [success]
+          description: Status of the request
+        model:
+          type: string
+          description: The model used for generation
+        generated_code:
+          type: string
+          description: The generated code
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [healthy, unhealthy]
+          description: Overall health status
+        service:
+          type: string
+          description: Service name
+        ollama:
+          type: object
+          properties:
+            url:
+              type: string
+              description: Ollama service URL
+            status:
+              type: string
+              enum: [connected, disconnected, error, timeout]
+              description: Ollama connection status
+            model:
+              type: string
+              description: Current model name
+            error:
+              type: string
+              description: Error message if any
+    ErrorResponse:
+      type: object
+      properties:
+        detail:
+          type: string
+          description: Error message 
